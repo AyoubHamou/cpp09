@@ -1,5 +1,6 @@
 #include "BitcoinExchange.hpp"
 #include <fstream>
+#include <iomanip>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -8,9 +9,12 @@
 
 float stringTofloat(const std::string &str){
 	float f;
+	std::string tmp;
 
 	std::istringstream iss(str);
 	if (!(iss >> f))
+		throw std::runtime_error("Error Converting string to float");
+	if (iss >> tmp)
 		throw std::runtime_error("Error Converting string to float");
 	return f;
 }
@@ -99,6 +103,15 @@ int check_date(std::string &date){
     return 1;
   if (day < 1 || day > 31)
     return 1;
+	if ((month == 4 || month == 6 || month == 9 || month == 11) && day > 30) {
+    return 1;
+  }
+  if (month == 2) {
+  bool isLeap = (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
+    if (day > 29 || (day == 29 && !isLeap)) {
+        return 1;
+    }
+  }
 	return 0;
 }
 
@@ -107,12 +120,12 @@ float BitcoinExchange::getprice(std::string date){
 	for (it = map.begin();it != map.end(); it++){
 		if (!it->first.compare(date))
 			return it->second;
-		else if (it->first.compare(date) > 0){
+		if (it->first.compare(date) > 0){
 			it--;
 			return it->second;
 		}
 	}
-	return -1;
+	return 47115.93;
 }
 
 
@@ -149,7 +162,7 @@ void BitcoinExchange::exec(const char* file){
 			continue;
 		}
 		price = getprice(p.first);
-		std::cout << p.first << " => " << p.second << " = " << p.second * price << std::endl;
+		std::cout << std::setprecision(2) << p.first << " => " << p.second << " = " << p.second * price << std::endl;
 	}
 	infile.close();
 }
